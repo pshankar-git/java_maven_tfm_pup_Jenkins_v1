@@ -43,30 +43,23 @@ resource "aws_security_group" "puppet-security-group" {
 }
 
 # Creating EC2 Instance for Puppet Master and Agent
-resource "aws_key_pair" "puppet-key-pair" {
+
+resource "aws_key_pair" "puppet_ec2_key" {
     key_name   = "${var.key_pair_name}"
-    public_key = "${var.public_key}"
+    public_key = "${file("puppet_ec2_key.pub")}"
 }
 
+
 resource "aws_instance" "PuppetServer" {
-    ami = "ami-07d0cf3af28718ef8"
+    ami = "${lookup(var.ami, var.region)}"
     instance_type = "${var.instance_type}"
-    
     subnet_id = "${var.subnet_id}"
     vpc_security_group_ids = ["${aws_security_group.puppet-security-group.id}"]
     count = "${length(var.tags)}"
-    /* provisioner "local-exec" {
-        command = "echo ${aws_instance.PuppetServer.*.public_ip} >> ip_address.txt"
-    } */
     associate_public_ip_address = "true"
     key_name = "${var.key_pair_name}"
-    user_data = <<EOF
-                #! /bin/bash
-        sudo apt-get update -y
-        EOF
     tags = {
         Name = "Puppet${element(var.tags, count.index)}"
         Env = "DEV"
     }
 }
-
