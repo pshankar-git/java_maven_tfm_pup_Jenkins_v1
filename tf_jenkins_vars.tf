@@ -1,6 +1,18 @@
-variable "region" {}
-variable "vpc_id" {}
-variable "subnet_id" {}
+## Default values set for region, subnet and VPC.
+## Please change these values as per your environment
+
+variable "region" {
+    default = "us-east-1"   
+}
+
+variable "vpc_id" {
+    default = "vpc-8cf379f6"
+}
+
+variable "subnet_id" {
+    default = "subnet-d0dc99fe"
+}
+
 
 variable "ports" {
     type = "list"

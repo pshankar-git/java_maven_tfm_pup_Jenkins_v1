@@ -70,7 +70,7 @@ pipeline {
 
         stage ('Terraform Apply') {
             steps {
-                sh 'terraform apply -var region=us-east-1 -var subnet_id=subnet-d0dc99fe -var vpc_id=vpc-8cf379f6 --auto-approve'
+                sh 'terraform apply --auto-approve'
             }
         }
 
