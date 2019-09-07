@@ -76,7 +76,7 @@ pipeline {
 
         stage ('Setting up puppet node on Tomcat server') {
             steps {
-                bash '''tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`
+                sh '''tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`
                         tc_server_pri_dns=`terraform output -json tomcat_private_dns | cut -d '"' -f2`
                         tc_server_pub_ip=`terraform output -json tomcat_public_ip | cut -d '"' -f2`    
                         tc_server_pri_ip=`terraform output -json tomcat_private_ip | cut -d '"' -f2`
