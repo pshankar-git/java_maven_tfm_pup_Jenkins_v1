@@ -1,18 +1,6 @@
-## Default values set for region, subnet and VPC.
-## Please change these values as per your environment
-
-variable "region" {
-    default = "us-east-1"   
-}
-
-variable "vpc_id" {
-    default = "vpc-8cf379f6"
-}
-
-variable "subnet_id" {
-    default = "subnet-d0dc99fe"
-}
-
+variable "region" {}
+variable "vpc_id" {}
+variable "subnet_id" {}
 
 variable "ports" {
     type = "list"
@@ -45,18 +33,18 @@ variable "tags"{
     default = ["Server"]
 }
 
-output "ec2_public_ip" {
+output "tomcat_public_ip" {
   value = "${aws_instance.TomcatServer.*.public_ip}"
 }
 
-output "ec2_private_ip" {
+output "tomcat_private_ip" {
   value = "${aws_instance.TomcatServer.*.private_ip}"
 }
 
-output "ec2_public_dns" {
+output "tomcat_public_dns" {
   value = "${aws_instance.TomcatServer.*.public_dns}"
 }
 
-output "ec2_private_dns" {
+output "tomcat_private_dns" {
   value = "${aws_instance.TomcatServer.*.private_dns}"
 }
