@@ -87,7 +87,7 @@ pipeline {
                     '''
                     echo 'Deploying....'
                     sh '''
-                    ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF
+                    ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@\${tc_server_pri_dns} -oStrictHostKeyChecking=no <<EOF
                     sudo su -
                     hostname tomcatpuppetagent.ec2.internal
                     echo tomcatpuppetagent.ec2.internal > /etc/hostname
