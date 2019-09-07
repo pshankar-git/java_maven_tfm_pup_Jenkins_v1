@@ -1,33 +1,50 @@
-variable "region" {
-    default = "us-east-1"
+variable "region" {}
+variable "vpc_id" {}
+variable "subnet_id" {}
+
+variable "ports" {
+    type = "list"
+    default = ["22", "9090", 0]
 }
 
-variable "vpc_cidr" {
-    default = "10.0.0.0/16"
+variable "ami" {
+    type = "map"
+    default = {
+        "us-east-1" = "ami-07d0cf3af28718ef8"
+        "us-east-2" = "ami-05c1fa8df71875112"
+        "us-west-1" = "ami-08fd8ae3806f09a08"
+        "us-west-2" = "ami-06f2f779464715dc5"
+        "ap-south-1" = "ami-009110a2bf8d7dd0a"
+    }
 }
-
-variable "subnet_cidr" {
-    default = "10.0.1.1/24"
+variable "cidr_block_all_traffic" {
+    default = "0.0.0.0/0"
+}
+variable "key_pair_name" {
+    default = "tomcat_ec2_key"
 }
 
 variable "instance_type" {
     default = "t2.micro" 
 }
 
-variable "cidr_block_all_traffic" {
-    default = "0.0.0.0/0"
-}
-
-variable "ec2_key_name" {
-    default = "IAC_practice"  
-}
-
-variable "ports" {
+variable "tags"{
     type = "list"
-    default = ["22", "8080", 0]
+    default = ["Server"]
 }
 
+output "ec2_public_ip" {
+  value = "${aws_instance.TomcatServer.*.public_ip}"
+}
 
-  
+output "ec2_private_ip" {
+  value = "${aws_instance.TomcatServer.*.private_ip}"
+}
 
+output "ec2_public_dns" {
+  value = "${aws_instance.TomcatServer.*.public_dns}"
+}
 
+output "ec2_private_dns" {
+  value = "${aws_instance.TomcatServer.*.private_dns}"
+}
