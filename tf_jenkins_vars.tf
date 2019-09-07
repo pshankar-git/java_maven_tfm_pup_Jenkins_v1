@@ -1,6 +1,12 @@
-variable "region" {}
-variable "vpc_id" {}
-variable "subnet_id" {}
+variable "region" {
+    default = "us-east-1"
+}
+variable "vpc_id" {
+    default = "vpc-8cf379f6"
+}
+variable "subnet_id" {
+    default = "subnet-d0dc99fe"
+}
 
 variable "ports" {
     type = "list"
