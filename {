@@ -1,0 +1,267 @@
+Script started on 2019-09-08 08:06:25+0000
+                    def tfHome = tool name: 'Terraform_0.12.6', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
+
+                }
+            sh 'terraform --version'
+
+            }
+        }
+        stage ('Terraform Init and Plan') {
+            steps {
+                sh 'terraform init $WORKSPACE'
+                sh 'terraform plan'
+            }
+        }
+
+        stage ('Terraform Apply') {
+            steps {
+                sh 'terraform apply --auto-approve'
+            }
+        }
+
+        stage ('Setting up Host variables') {
+            steps {
+                sh """
+                    tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`
+                    tc_server_pri_dns=`terraform output -json tomcat_private_dns | cut -d '"' -f2`
+                    tc_server_pub_ip=`terraform output -json tomcat_public_ip | cut -d '"' -f2`
+                    tc_server_pri_ip=`terraform output -json tomcat_private_ip | cut -d '"' -f2`
+                    pupmaster_pri_dns=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_dns.txt`
+                    pupmaster_pri_ip=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_ip.txt`                    
+                """
+            }
+        }    
+        
+        stage ('Setting up puppet node on Tomcat server') {
+            steps {
+                sshagent(['ubuntu']) {
+                    echo 'Deploying....'
+                    sh """
+                    ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@\$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF
+                    sudo su -
+                    hostname tomcatpuppetagent.ec2.internal
+                    echo tomcatpuppetagent.ec2.internal > /etc/hostname
+                    apt-get update -y
+                    echo \$pupmaster_pri_ip puppetmaster.ec2.internal \${pupmaster_pri_dns} >> /etc/hosts
+                    echo \${tc_server_pri_ip} tomcatpuppetagent.ec2.internal \${tc_server_pri_dns} >> /etc/hosts
+                    wget https://apt.puppetlabs.com/puppet-release-bionic.deb
+                    dpkg -i puppet-release-bionic.deb
+                    apt-get install puppet -y
+                    mv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig
+                    echo [main] > /etc/puppet/puppet.conf
+                    echo ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf
+                    echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf
+                    echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf
+                    systemctl restart puppet
+                    systemctl enable puppet
+                    exit
+                    exit
+                    EOF
+                    """.stripIndent()
+                }
+            }
+        }
+
+        stage ('Puppet Master') {
+            steps {
+                sshagent(['ubuntu']) {
+                    echo 'Deploying....'
+                    sh """
+                    ssh -tt ubuntu@ec2-54-167-14-15.compute-1.amazonaws.com -oStrictHostKeyChecking=no <<EOF
+                    sudo su -
+                    echo ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_server_pri_dns} >> /etc/hosts
+                    echo "## SIGNING PUPPET AGENT CERTIFICATE REQUEST ##"
+                    puppet cert list
+                    puppet cert sign tomcatpuppetagent.ec2.internal
+                    exit
+                    exit
+
+                    /* cd /etc/puppet/code/environments/test/modules
+                    puppet module install puppetlabs-java
+                    sleep 15
+                    ls -ltr
+                    exit
+                    exit */
+                    EOF
+                    """.stripIndent()
+                }
+            }
+
+        }
+
+        stage ('Testing Tomcat Agent') {
+            steps {
+                sshagent(['ubuntu']) {
+                    echo 'Testing Tomcat puppet Agent status....'
+                    sh """
+                    ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@$tc_server -oStrictHostKeyCheckin]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps#                     def tfHome = tool name: 'Terraform_0.12.6', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation''
+
+Command 'def' not found, did you mean:
+
+  command 'den' from snap den (1.2.0-0)
+  command 'dex' from deb dex
+  command 'df' from deb coreutils
+  command 'dep' from deb go-dep
+
+See 'snap info <snapname>' for additional versions.
+
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# 
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps#                 }
+bash: syntax error near unexpected token `}'
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps#             sh 'terraform --version'
+sh: 0: Can't open terraform --version
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# 
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps#             }
+bash: syntax error near unexpected token `}'
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps#         }
+bash: syntax error near unexpected token `}'
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps#         stage ('Terraform Init and Plan') {
+bash: syntax error near unexpected token `'Terraform Init and Plan''
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps#             steps {
+
+Command 'steps' not found, did you mean:
+
+  command 'step' from snap step (19.08.0)
+  command 'step' from deb step
+
+See 'snap info <snapname>' for additional versions.
+
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# ^C ^C
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# clear
+[3J[H[2J]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# git remote[K[K[K[K[K[Kls-remote
+fatal: No remote configured to list refs from.
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# git remote add https://github.com/pramodk05/java_maven_jenkins
+usage: git remote add [<options>] <name> <url>
+
+    -f, --fetch           fetch the remote branches
+    --tags                import all tags and associated objects when fetching
+                          or do not fetch any tag at all (--no-tags)
+    -t, --track <branch>  branch(es) to track
+    -m, --master <branch>
+                          master branch
+    --mirror[=<push|fetch>]
+                          set up remote as a mirror to push to or fetch from
+
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# ^C
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# git remote add origin https://github.com/pramodk05/java_maven_jenkins
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# git push -u origin master
+Username for 'https://github.com': pramodk05
+Password for 'https://pramodk05@github.com': 
+Counting objects: 3, done.
+Compressing objects:  33% (1/3)   Compressing objects:  66% (2/3)   Compressing objects: 100% (3/3)   Compressing objects: 100% (3/3), done.
+Writing objects:  33% (1/3)   Writing objects:  66% (2/3)   Writing objects: 100% (3/3)   Writing objects: 100% (3/3), 341 bytes | 341.00 KiB/s, done.
+Total 3 (delta 2), reused 0 (delta 0)
+remote: Resolving deltas:   0% (0/2)[Kremote: Resolving deltas:  50% (1/2)[Kremote: Resolving deltas: 100% (2/2)[Kremote: Resolving deltas: 100% (2/2), completed with 2 local objects.[K
+To https://github.com/pramodk05/java_maven_jenkins
+   237b34f..d506f22  master -> master
+Branch 'master' set up to track remote branch 'master' from 'origin'.
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# cd /var/lib/jenkins/workspace/
+]0;root@ip-172-31-88-195: /var/lib/jenkins/workspaceroot@ip-172-31-88-195:/var/lib/jenkins/workspace# ls -ltr
+total 24
+drwxr-xr-x 2 jenkins jenkins 4096 Sep  4 18:47 [0m[01;34mpuppet_test[0m
+drwxr-xr-x 3 jenkins jenkins 4096 Sep  7 08:17 [01;34mterraform_destroy[0m
+drwxr-xr-x 2 jenkins jenkins 4096 Sep  7 08:17 [01;34mterraform_destroy@tmp[0m
+drwxr-xr-x 2 jenkins jenkins 4096 Sep  8 07:46 [01;34mpuppet_test@tmp[0m
+drwxr-xr-x 6 jenkins jenkins 4096 Sep  8 08:08 [01;34mterraform_pipeline[0m
+drwxr-xr-x 3 jenkins jenkins 4096 Sep  8 08:08 [01;34mterraform_pipeline@tmp[0m
+]0;root@ip-172-31-88-195: /var/lib/jenkins/workspaceroot@ip-172-31-88-195:/var/lib/jenkins/workspace# cd terraform_ppi
+bash: cd: terraform_ppi: No such file or directory
+]0;root@ip-172-31-88-195: /var/lib/jenkins/workspaceroot@ip-172-31-88-195:/var/lib/jenkins/workspace# cd terraform_ppi[K[Kipeline
+]0;root@ip-172-31-88-195: /var/lib/jenkins/workspace/terraform_pipelineroot@ip-172-31-88-195:/var/lib/jenkins/workspace/terraform_pipeline# ls -ltr
+total 52
+drwxr-xr-x 4 jenkins jenkins 4096 Sep  1 16:52 [0m[01;34msrc[0m
+-rw-r--r-- 1 jenkins jenkins 1784 Sep  1 16:52 pom.xml
+-rw-r--r-- 1 jenkins jenkins  768 Sep  1 16:52 README.md
+-rw-r--r-- 1 jenkins jenkins 1079 Sep  1 16:52 LICENSE
+-rw-r--r-- 1 jenkins jenkins 1105 Sep  7 18:17 tf_jenkins_vars.tf
+-rw-r--r-- 1 jenkins jenkins 7367 Sep  7 18:18 terraform.tfstate.backup
+-rw-r--r-- 1 jenkins jenkins 1798 Sep  7 19:50 tf_jenkins.tf
+-rw-r--r-- 1 jenkins jenkins 5908 Sep  8 08:07 Jenkinsfile
+drwxr-xr-x 8 jenkins jenkins 4096 Sep  8 08:07 [01;34mtarget[0m
+-rw-r--r-- 1 jenkins jenkins 7379 Sep  8 08:08 terraform.tfstate
+]0;root@ip-172-31-88-195: /var/lib/jenkins/workspace/terraform_pipelineroot@ip-172-31-88-195:/var/lib/jenkins/workspace/terraform_pipeline# rm -rf ./*
+]0;root@ip-172-31-88-195: /var/lib/jenkins/workspace/terraform_pipelineroot@ip-172-31-88-195:/var/lib/jenkins/workspace/terraform_pipeline# ls -ltr
+total 0
+]0;root@ip-172-31-88-195: /var/lib/jenkins/workspace/terraform_pipelineroot@ip-172-31-88-195:/var/lib/jenkins/workspace/terraform_pipeline# ls -tlra
+total 24
+-rw-r--r-- 1 jenkins jenkins   48 Sep  1 16:52 .travis.yml
+-rw-r--r-- 1 jenkins jenkins  257 Sep  1 16:52 .gitignore
+drwxr-xr-x 3 jenkins jenkins 4096 Sep  1 17:34 [0m[01;34m.terraform[0m
+drwxr-xr-x 8 jenkins jenkins 4096 Sep  4 18:47 [01;34m..[0m
+drwxr-xr-x 8 jenkins jenkins 4096 Sep  8 08:07 [01;34m.git[0m
+drwxr-xr-x 4 jenkins jenkins 4096 Sep  8 08:15 [01;34m.[0m
+]0;root@ip-172-31-88-195: /var/lib/jenkins/workspace/terraform_pipelineroot@ip-172-31-88-195:/var/lib/jenkins/workspace/terraform_pipeline# clear
+[3J[H[2J]0;root@ip-172-31-88-195: /var/lib/jenkins/workspace/terraform_pipelineroot@ip-172-31-88-195:/var/lib/jenkins/workspace/terraform_pipeline# cd /opt/apps
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# vi Jenkinsfile 
+[?2004h[?1049h[22;0;0t[?1h=[?2004h[1;44r[?12h[?12l[27m[23m[29m[m[H[2J[?25l[44;1H"Jenkinsfile" 168L, 5908C[2;1H▽[6n[2;1H  [1;1H[>c]10;?]11;?[1;21Hsudo su -[2;21Hecho ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_server_pri_dns} >> /etc/hosts[3;21Hecho "## SIGNING PUPPET AGENT CERTIFICATE REQUEST ##"[4;21Hpuppet cert list[5;21Hpuppet cert sign tomcatpuppetagent.ec2.internal[6;21Hexit[7;21Hexit[9;21H/* cd /etc/puppet/code/environments/test/modules[10;21Hpuppet module install puppetlabs-java[11;21Hsleep 15[12;21Hls -ltr[13;21Hexit[14;21Hexit */[15;21HEOF[16;21H""".stripIndent()[17;17H}[18;13H}[20;9H}[22;9Hstage ('Testing Tomcat Agent') {[23;13Hsteps {[24;17Hsshagent(['ubuntu']) {[25;21Hecho 'Testing Tomcat puppet Agent status....'[26;21Hsh """[27;21Hssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@$tc_server -oStrictHostKeyChecking=no <<EOF[28;21Hsudo su -[29;21Hpuppet agent -t[30;21Hsleep 15[31;21Hexit[32;21Hexit[33;21HEOF[34;21H""".stripIndent()[35;17H}[36;13H}[39;9H}
+    }
+}[44;140H168,0-1[7CBot[43;1H[?25h[?25l[44;130H^[[43;1H[44;130H  [43;1H[44;130H^[[43;1H[44;130H  [43;1H[?25h[?25l[44;130Hg[43;1H[?25h[?25l[44;130H [43;1H[44;130Hgg[43;1H[44;130H  [1;1H[27m[23m[29m[m[H[2J[1;1Hpipeline {
+    agent any[4;5Hstages {[6;8Hstage('SCM Checkout') {[7;13Hsteps {[8;17Hgit credentialsId: '8e237d54-cc07-4aad-a3fe-51855a4d84c1', url: 'https://github.com/pramodk05/java_maven_jenkins.git'[9;13H}[10;9H}[12;9Hstage('Compile Stage') {[13;13Hsteps {[14;17HwithMaven(maven : 'maven_3.6') {[15;21Hsh 'mvn clean compile'[16;17H}[17;13H}[18;9H}[21;9Hstage('Test Stage') {[22;13Hsteps {[23;17HwithMaven(maven : 'maven_3.6') {[24;21Hsh 'mvn test'[25;17H}[26;13H}[27;9H}[30;9Hstage('Create the Build artifacts Stage (Package)') {[31;13Hsteps {[32;17HwithMaven(maven : 'maven_3.6') {[33;21Hsh 'mvn package'[34;17H}[35;13H}[36;9H}[38;9Hstage ('Tomcat SSH key Setup') {[39;13Hsteps {[40;17Hsh 'tomcat_setup_dir=/opt/tomcat_jenkins_setup && mkdir -p ${tomcat_setup_dir}'[41;17Hscript {[42;21Hdef tomcat_key_file = fileExists '/opt/tomcat_jenkins_setup/tomcat_ec2_key'[43;21Hif (tomcat_key_file) {[44;140H1,1[11CTop[1;1H[?25h[?25l[44;130Hd[1;1H[?25h[?25l[44;131HG[1;1H[44;130H  [1;1H[1;1H[K[2;1H[1m[34m~                                                                                                                                                            [3;1H~                                                                                                                                                            [4;1H~                                                                                                                                                            [5;1H~                                                                                                                                                            [6;1H~                                                                                                                                                            [7;1H~                                                                                                                                                            [8;1H~                                                                                                                                                            [9;1H~                                                                                                                                                            [10;1H~                                                                                                                                                            [11;1H~                                                                                                                                                            [12;1H~                                                                                                                                                            [13;1H~                                                                                                                                                            [14;1H~                                                                                                                                                            [15;1H~                                                                                                                                                            [16;1H~                                                                                                                                                            [17;1H~                                                                                                                                                            [18;1H~                                                                                                                                                            [19;1H~                                                                                                                                                            [20;1H~                                                                                                                                                            [21;1H~                                                                                                                                                            [22;1H~                                                                                                                                                            [23;1H~                                                                                                                                                            [24;1H~                                                                                                                                                            [25;1H~                                                                                                                                                            [26;1H~                                                                                                                                                            [27;1H~                                                                                                                                                            [28;1H~                                                                                                                                                            [29;1H~                                                                                                                                                            [30;1H~                                                                                                                                                            [31;1H~                                                                                                                                                            [32;1H~                                                                                                                                                            [33;1H~                                                                                                                                                            [34;1H~                                                                                                                                                            [35;1H~                                                                                                                                                            [36;1H~                                                                                                                                                            [37;1H~                                                                                                                                                            [38;1H~                                                                                                                                                            [39;1H~                                                                                                                                                            [40;1H~                                                                                                                                                            [41;1H~                                                                                                                                                            [42;1H~                                                                                                                                                            [43;1H~                                                                                                                                                            [m[44;1H--No lines in buffer--[44;140H[K[44;140H0,0-1[9CAll[1;1H[?25h[?25l[44;130H^[[1;1H[44;130H  [1;1H[44;130H^[[1;1H[44;130H  [1;1H[?25h[?25l[44;130Hi[1;1H[44;130H [1;1H[44;1H[1m-- INSERT --[m[44;13H[K[44;140H0,1[11CAll[1;1H[?25h[?25lpipeline {[2;1H[K[2;1H[?25h[?25l    agent any[3;1H[K[3;1H[?25h[?25l
+    stages {[4;13H[K[5;1H[K[5;1H[?25h[?25l
+       stage('SCM Checkout') {[6;31H[K[7;1H            steps {[7;20H[K[8;1H[K[8;1H[?25h[?25l[16Cgit credentialsId: '8e237d54-cc07-[?25h[?25l4aad-a3fe-51855a4d84c1', url: 'https://github.com/pramo[?25h[?25ldk05/java_maven_jenkins.git'
+            }[9;14H[K[10;1H        }[10;10H[K[11;1H[K[12;1H   [12;4H[K[12;4H[?25h[?25l     stage('Compile Stage') {
+            steps {[13;20H[K[14;1H         [14;10H[K[14;10H[?25h[?25l[7CwithMaven(maven : 'maven_3.6') {
+                    s[15;22H[K[15;22H[?25h[?25lh 'mvn clean compile'
+                }[16;18H[K[17;1H            }[17;14H[K[18;1H       [18;8H[K[18;8H[?25h[?25l }[19;1H[K[20;1H[K[21;1H        stage('Test Stage') {[21;30H[K[22;1H            steps {[22;20H[K[23;1H       [23;8H[K[23;8H[?25h[?25l[9CwithMaven(maven : 'maven_3.6') {
+                    [24;21H[K[24;21H[?25h[?25lsh 'mvn test'
+                }[25;18H[K[26;1H            }[26;14H[K[27;1H        }[27;10H[K[28;1H[K[29;1H[K[30;1H     [30;6H[K[30;6H[?25h[?25l   stage('Create the Build artifacts Stage (Package)') {
+      [31;7H[K[31;7H[?25h[?25l      steps {
+                withMaven(maven : 'maven_3.6') {[32;49H[K[33;1H[K[33;1H[?25h[?25l[20Csh 'mvn package'
+                }[34;18H[K[35;1H        [35;9H[K[35;9H[?25h[?25l    }
+        }[36;10H[K[37;1H[K[38;1H        stage ('Tomcat SSH key Setup') {[38;41H[K[39;1H     [39;6H[K[39;6H[?25h[?25l[7Csteps {
+                sh 'tomcat_setup_dir=/opt/tomcat[40;49H[K[40;49H[?25h[?25l_jenkins_setup && mkdir -p ${tomcat_setup_dir}'
+               [41;16H[K[41;16H[?25h[?25l script {
+                    def tomcat_key_file = fileExists [42;54H[K[42;54H[?25h[?25l'/opt/tomcat_jenkins_setup/tomcat_ec2_key'
+                    [43;21H[K[43;21H[?25h[?25lif (tomcat_key_file) {[?25h[?25l[1;43r[43;1H
+[1;44r[43;25Hsh 'echo Tomcat ssh key already present'[44;11H[1m(paste) --[m[44;140H[K[44;140H46,10[9C33%[43;10H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21H} else {[43;25Hsh 'ssh-keygen -f ${tomcat_setup_dir}/tomcat_ec2[44;140H[K[44;140H46,73[9CBot[43;73H[?25h[?25l_key -N ""'[43;52H[?25h[?25l[1;43r[43;1H
+[1;44r[43;25Hsh 'echo Tomcat Key generated successfully'[44;140H[K[44;140H51,6[10C50%[43;6H[?25h[?25l[1;43r[1;1H[4M[1;44r[40;21H}[42;17H}[43;13H}[44;140H[K[44;140H55,8[10C66%[43;8H[?25h[?25l[1;43r[1;1H[4M[1;44r[40;9H}[42;9Hstage ('Terraform Setup') {[43;13Hsteps {[44;140H[K[44;140H57,26[9C85%[43;26H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;17Hscript {[43;21Hdef tfHome = tool name: 'Terraform_0.12.6', type: 'org.jenkinsci.plu[44;140H[K[44;140H57,89[9CBot[43;89H[?25h[?25lgins.terraform.TerraformInstallation'[43;7H[?25h[?25l[1;43r[1;1H[3M[1;44r[42;17H}[43;13Hsh 'terraform --version'[44;140H[K[44;140H64,8[10C80%[43;8H[?25h[?25l[1;43r[1;1H[4M[1;44r[41;13H}[42;9H}[43;9Hstage ('Terraform Init and Plan') {[44;140H[K[44;140H66,7[10C91%[43;7H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;13Hsteps {[43;17Hsh 'terraform init $WORKSPACE'[44;140H[K[44;140H67,23[9C95%[43;23H[?25h[?25l[1;43r[43;1H
+[1;44r[43;17Hsh 'terraform plan'[44;140H[K[44;140H71,25[9C85%[43;25H[?25h[?25l[1;43r[1;1H[4M[1;44r[40;13H}[41;9H}[43;9Hstage ('Terraform Apply') {[44;140H[K[44;140H73,32[9C93%[43;32H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;13Hsteps {[43;17Hsh 'terraform apply --auto-approve'[44;140H[K[44;140H77,18[9C88%[43;18H[?25h[?25l[1;43r[1;1H[4M[1;44r[40;13H}[41;9H}[43;9Hstage ('Setting up Host variables') {[44;140H[K[44;140H79,15[9C94%[43;15H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;13Hsteps {[43;17Hsh """[44;140H[K[44;140H80,55[9C97%[43;55H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hexport tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`[44;140H[K[44;140H81,13[9C97%[43;13H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hexport tc_server_pri_dns=`terraform output -json tomcat[44;140H[K[44;140H81,76[9CBot[43;76H[?25h[?25l_private_dns | cut -d '"' -f2`[43;33H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hexport tc_server_pub_ip=`terraform output -json tomcat_public_ip | cut -d '[44;140H[K[44;140H82,96[9CBot[43;96H[?25h[?25l"' -f2`[43;56H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hexport tc_server_pri_ip=`terraform output -json tomcat_private_ip | cut -d '"' -f2`[44;140H[K[44;140H84,15[9C97%[43;15H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hexport pupmaster_pri_dns=`sed -n '1p' < /opt/pup_setup_tf[44;140H[K[44;140H84,78[9CBot[43;78H[?25h[?25l/ec2_private_dns.txt`[43;42H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hexport pupmaster_pri_ip=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_ip.txt`[44;140H[K[44;140H85,105[8CBot[43;105H[?25h[?25l  [?25h[?25l[1;43r[1;1H[4M[1;44r[40;17H"""[41;13H}[42;9H}[44;140H[K[44;140H90,57[9C97%[43;57H[?25h[?25l[1;43r[43;1H
+[1;44r[43;9Hstage ('Setting up puppet node on Tomcat server') {[44;140H[K[44;140H93,17[9C94%[43;17H[?25h[?25l[1;43r[1;1H[3M[1;44r[41;13Hsteps {[42;17Hsh """[43;21Hssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@[44;140H[K[44;140H93,80[9CBot[43;80H[?25h[?25l$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF[43;12H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hsudo su -[44;140H[K[44;140H95,45[9C98%[43;45H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hhostname tomcatpuppetagent.ec2.internal[44;140H[K[44;140H96,48[9C98%[43;48H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho tomcatpuppetagent.ec2.internal > /etc/hostname[44;140H[K[44;140H98,1[10C96%[43;1H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hapt-get update -y[43;21Hecho $pupmaster_pri_ip puppetmaster.ec2.int[44;140H[K[44;140H98,64[9CBot[43;64H[?25h[?25lernal ${pupmaster_pri_dns} >> /etc/hosts[43;23H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_serv[44;140H[K[44;140H99,86[9CBot[43;86H[?25h[?25ler_pri_dns} >> /etc/hosts[43;38H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hwget https://apt.puppetlabs.com/puppet-release-bionic.deb[44;140H[K[44;140H101,23[8C98%[43;23H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hdpkg -i puppet-release-bionic.deb[44;140H[K[44;140H102,32[8C98%[43;32H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hapt-get install puppet -y[44;140H[K[44;140H103,49[8C98%[43;49H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hmv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig[44;140H[K[44;140H104,36[8C98%[43;36H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho [main] > /etc/puppet/puppet.conf[44;140H[K[44;140H105,41[8C98%[43;41H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf[44;140H[K[44;140H106,23[8C98%[43;23H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/pup[44;140H[K[44;140H106,86[8CBot[43;86H[?25h[?25lpet.conf[43;55H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf[44;140H[K[44;140H108,31[8C98%[43;31H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hsystemctl restart puppet[44;140H[K[44;140H110,5[9C97%[43;5H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsystemctl enable puppet[43;21Hexit[44;140H[K[44;140H112,18[8C97%[43;18H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hexit[43;21HEOF[44;140H[K[44;140H115,5[9C95%[43;5H[?25h[?25l[1;43r[1;1H[3M[1;44r[41;21H""".stripIndent()[42;13H}[43;9H}[44;140H[K[44;140H119,3[9C94%[43;3H[?25h[?25l[1;43r[1;1H[4M[1;44r[41;9Hstage ('Puppet Master') {[42;13Hsteps {[43;17Hsshagent(['ubuntu']) {[44;140H[K[44;140H120,27[8C98%[43;27H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho 'Deploying....'[44;140H[K[44;140H122,22[8C97%[43;22H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsh """[43;21Hssh -tt ubuntu@ec2-54-167-14-15.compute-1.amazonaws.com -oStrict[44;140H[K[44;140H122,85[8CBot[43;85H[?25h[?25lHostKeyChecking=no <<EOF[43;9H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsudo su -[43;21Hecho ${tc_server_pri_ip} tomcatpuppetagent.ec2.inte[44;140H[K[44;140H124,72[8CBot[43;72H[?25h[?25lrnal ${tc_server_pri_dns} >> /etc/hosts[43;24H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho "## SIGNING PUPPET AGENT CERTIFICATE REQUEST ##"[44;140H[K[44;140H126,13[8C98%[43;13H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hpuppet cert list[44;140H[K[44;140H127,39[8C98%[43;39H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hpuppet cert sign tomcatpuppetagent.ec2.internal[44;140H[K[44;140H129,9[9C97%[43;9H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hexit[43;21Hexit[44;140H[K[44;140H131,46[8C97%[43;46H[?25h[?25l[1;43r[1;1H[2M[1;44r[43;21H/* cd /etc/puppet/code/environments/test/modules[44;140H[K[44;140H132,40[8C98%[43;40H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hpuppet module install puppetlabs-java[44;140H[K[44;140H134,16[8C97%[43;16H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsleep 15[43;21Hls -ltr[44;140H[K[44;140H136,26[8C97%[43;26H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hexit[43;21Hexit */[44;140H[K[44;140H138,37[8C97%[43;37H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21HEOF[43;21H""".stripIndent()[44;140H[K[44;140H144,18[8C94%[43;18H[?25h[?25l[1;43r[1;1H[6M[1;44r[38;17H}[39;13H}[41;9H}[43;9Hstage ('Testing Tomcat Agent') {[44;140H[K[44;140H146,20[8C98%[43;20H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;13Hsteps {[43;17Hsshagent(['ubuntu']) {[44;140H[K[44;140H147,44[8C99%[43;44H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho 'Testing Tomcat puppet Agent status....'[44;140H[K[44;140H149,14[8C98%[43;14H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsh """[43;21Hssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubun[44;140H[K[44;140H149,77[8CBot[43;77H[?25h[?25ltu@$tc_server -oStrictHostKeyChecking=no <<EOF[43;17H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hsudo su -[44;140H[K[44;140H152,14[8C98%[43;14H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hpuppet agent -t[43;21Hsleep 15[44;140H[K[44;140H154,23[8C98%[43;23H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hexit[43;21Hexit[44;140H[K[44;140H156,37[8C98%[43;37H[?25h[?25l[1;43r[1;1H[11M[1;44r[33;21HEOF[34;21H""".stripIndent()[35;17H}[36;13H}[39;9H}
+    }
+}[44;11H[1m--a[m[44;13H[K[44;140H165,1[9CBot[43;1H[?25h[44;1H[K[43;1H[?25l[44;130H^[[43;1H[44;130H  [43;1H[44;140H165,0-1[7CBot[43;1H[?25h[?25l[44;130H:[43;1H[44;130H[K[44;1H:[?2004h[?25hw[?25l[?25hq[?25l[?25h[?25l[?2004l"Jenkinsfile" 165L, 5843C written
+[?2004l[?1l>[?25h[?1049l[23;0;0t]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# vi Jenkinsfile [3Pcd /opt/apps[7Plearls -tlra[1Pltrrm -rf ./*[3Pls -ltrcd terraform_pipelinepi[K[9Pls -ltrcd /var/lib/jenkins/workspace/[5Pgit push -u origin masterremote add origin https://github.com/pramodk05/java_maven_jenkins[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[7Phttps://github.com/pramodk05/java_maven_jenkins[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cls-remote[K[8Pclearalias ssh puppetmaster=`ssh -i /opt/pup_setup_tf/puppet_ec2_key ubuntu@ip-172-31-91-230.ec2.internal`[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Chistory | grep ssh[Kssh -i puppet_ec2_key ubuntu@ip-172-31-91-230.ec2.internal[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[37Pcd /opt/pup_setup_tf/[3Phistory | grep ssh[7Pman apt-get[K^C
+]0;root@ip-172-31-88-195: /opt/appsroot@ip-172-31-88-195:/opt/apps# i[Kgit ad .[K[Kd .
+]0;root4;140H95,45[9C98%[43;45H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hhostname tomcatpuppetagent.ec2.internal[44;140H[K[44;140H96,48[9C98%[43;48H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho tomcatpuppetagent.ec2.internal > /etc/hostname[44;140H[K[44;140H98,1[10C96%[43;1H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hapt-get update -y[43;21Hecho $pupmaster_pri_ip puppetmaster.ec2.int[44;140H[K[44;140H98,64[9CBot[43;64H[?25h[?25lernal ${pupmaster_pri_dns} >> /etc/hosts[43;23H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_serv[44;140H[K[44;140H99,86[9CBot[43;86H[?25h[?25ler_pri_dns} >> /etc/hosts[43;38H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hwget https://apt.puppetlabs.com/puppet-release-bionic.deb[44;140H[K[44;140H101,23[8C98%[43;23H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hdpkg -i puppet-release-bionic.deb[44;140H[K[44;140H102,32[8C98%[43;32H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hapt-get install puppet -y[44;140H[K[44;140H103,49[8C98%[43;49H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hmv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig[44;140H[K[44;140H104,36[8C98%[43;36H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho [main] > /etc/puppet/puppet.conf[44;140H[K[44;140H105,41[8C98%[43;41H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf[44;140H[K[44;140H106,23[8C98%[43;23H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/pup[44;140H[K[44;140H106,86[8CBot[43;86H[?25h[?25lpet.conf[43;55H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf[44;140H[K[44;140H108,31[8C98%[43;31H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hsystemctl restart puppet[44;140H[K[44;140H110,5[9C97%[43;5H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsystemctl enable puppet[43;21Hexit[44;140H[K[44;140H112,18[8C97%[43;18H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hexit[43;21HEOF[44;140H[K[44;140H115,5[9C95%[43;5H[?25h[?25l[1;43r[1;1H[3M[1;44r[41;21H""".stripIndent()[42;13H}[43;9H}[44;140H[K[44;140H119,3[9C94%[43;3H[?25h[?25l[1;43r[1;1H[4M[1;44r[41;9Hstage ('Puppet Master') {[42;13Hsteps {[43;17Hsshagent(['ubuntu']) {[44;140H[K[44;140H120,27[8C98%[43;27H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho 'Deploying....'[44;140H[K[44;140H122,22[8C97%[43;22H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsh """[43;21Hssh -tt ubuntu@ec2-54-167-14-15.compute-1.amazonaws.com -oStrict[44;140H[K[44;140H122,85[8CBot[43;85H[?25h[?25lHostKeyChecking=no <<EOF[43;9H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsudo su -[43;21Hecho ${tc_server_pri_ip} tomcatpuppetagent.ec2.inte[44;140H[K[44;140H124,72[8CBot[43;72H[?25h[?25lrnal ${tc_server_pri_dns} >> /etc/hosts[43;24H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hecho "## SIGNING PUPPET AGENT CERTIFICATE REQUEST ##"[44;140H[K[44;140H126,13[8C98%[43;13H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hpuppet cert list[44;140H[K[44;140H127,39[8C98%[43;39H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hpuppet cert sign tomcatpuppetagent.ec2.internal[44;140H[K[44;140H129,9[9C97%[43;9H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hexit[43;21Hexit[44;140H[K[44;140H131,46[8C97%[43;46H[?25h[?25l[1;43r[1;1H[2M[1;44r[43;21H/* cd /etc/puppet/code/environments/test/modules[44;140H[K[44;140H132,40[8C98%[43;40H[?25h[?25l[1;43r[43;1H
+[1;44r[43;21Hpuppet module install puppetlabs-java[44;140H[K[44;140H134,16[8C97%[43;16H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hsleep 15[43;21Hls -ltr[44;140H[K[44;140H136,26[8C97%[43;26H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21Hexit[43;21Hexit */[44;140H[K[44;140H138,37[8C97%[43;37H[?25h[?25l[1;43r[1;1H[2M[1;44r[42;21HEOF[43;21H""".stripIndent()[44;140H[K[44;140H144,18[8C94%[43;18H[?25h[?25l[1;43r[1;1H[6M[1;44r[38;17H}[39;13H}[41;9H}[43;9Hstage ('Testing Tomcat Agent') {[44;140H[K[44;14
