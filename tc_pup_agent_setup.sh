@@ -27,6 +27,7 @@ echo [main] > /etc/puppet/puppet.conf; \
 echo ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf; \
 echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf; \
 echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf; \
+echo environment = production >> /etc/puppet/puppet.conf; \
 export PATH=$PATH:/opt/puppetlabs/puppet/bin; \
 systemctl restart puppet; \
 systemctl enable puppet; \
