@@ -6,7 +6,8 @@ pupmaster_pri_ip=`sed -n '1p' < pup_master_pri_ip.txt`
 echo $pupmaster_pri_ip
 pupmaster_pri_dns=`sed -n '1p' < pup_master_pri_dns.txt`
 echo $pupmaster_pri_dns
-ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF
+sleep 20
+ssh -i tomcat_ec2_key -tt ubuntu@$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF
 sudo su -
 hostname tomcatpuppetagent.ec2.internal
 echo tomcatpuppetagent.ec2.internal > /etc/hostname
