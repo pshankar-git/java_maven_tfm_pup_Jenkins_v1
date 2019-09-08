@@ -46,7 +46,7 @@ resource "aws_security_group" "tomcat-security-group" {
 
 resource "aws_key_pair" "tomcat_ec2_key" {
     key_name   = "${var.key_pair_name}"
-    public_key = "${file("/opt/tomcat_jenkins_setup/tomcat_ec2_key.pub")}"
+    public_key = "${file("./tomcat_ec2_key.pub")}"
 }
 
 
