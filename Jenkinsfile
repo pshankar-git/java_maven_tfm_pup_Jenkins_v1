@@ -93,8 +93,8 @@ pipeline {
                     hostname tomcatpuppetagent.ec2.internal
                     echo tomcatpuppetagent.ec2.internal > /etc/hostname
                     apt-get update -y
-                    echo $pupmaster_pri_ip puppetmaster.ec2.internal $pupmaster_pri_dns >> /etc/hosts
-                    echo $tc_server_pri_ip tomcatpuppetagent.ec2.internal $tc_server_pri_dns >> /etc/hosts
+                    echo \${pupmaster_pri_ip} puppetmaster.ec2.internal \${pupmaster_pri_dns} >> /etc/hosts
+                    echo \${tc_server_pri_ip} tomcatpuppetagent.ec2.internal \${tc_server_pri_dns} >> /etc/hosts
                     wget https://apt.puppetlabs.com/puppet-release-bionic.deb
                     dpkg -i puppet-release-bionic.deb
                     apt-get install puppet -y
