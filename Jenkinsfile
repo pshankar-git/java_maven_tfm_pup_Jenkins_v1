@@ -87,52 +87,6 @@ pipeline {
             }
         }
 
-        stage ('Puppet Master') {
-            steps {
-                sshagent(['ubuntu']) {
-                    echo 'Deploying....'
-                    sh """
-                    ssh -tt ubuntu@ec2-54-167-14-15.compute-1.amazonaws.com -oStrictHostKeyChecking=no <<EOF
-                    sudo su -
-                    echo ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_server_pri_dns} >> /etc/hosts
-                    echo "## SIGNING PUPPET AGENT CERTIFICATE REQUEST ##"
-                    puppet cert list
-                    puppet cert sign tomcatpuppetagent.ec2.internal
-                    exit
-                    exit
-
-                    /* cd /etc/puppet/code/environments/test/modules
-                    puppet module install puppetlabs-java
-                    sleep 15
-                    ls -ltr
-                    exit
-                    exit */
-                    EOF
-                    """.stripIndent()
-                }
-            }
-
-        }
-
-        stage ('Testing Tomcat Agent') {
-            steps {
-                sshagent(['ubuntu']) {
-                    echo 'Testing Tomcat puppet Agent status....'
-                    sh """
-                    ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@$tc_server -oStrictHostKeyChecking=no <<EOF
-                    sudo su -
-                    puppet agent -t
-                    sleep 15
-                    exit
-                    exit
-                    EOF
-                    """.stripIndent()
-                }
-            }
-
-
-        }
     }
 }
-
 

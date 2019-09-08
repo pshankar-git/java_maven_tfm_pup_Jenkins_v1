@@ -16,19 +16,17 @@ echo ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_server_pri_dns} >> 
 wget https://apt.puppetlabs.com/puppet-release-bionic.deb
 dpkg -i puppet-release-bionic.deb
 apt-get update -y
-apt-get install puppet -y
-if [ $? -eq 0 ]; then
-  mv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig
-  echo [main] > /etc/puppet/puppet.conf
-  echo ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf
-  echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf
-  echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf
-  export PATH=$PATH:/opt/puppetlabs/puppet/bin
-  systemctl restart puppet
-  systemctl enable puppet
-  exit
-  exit
-fi
+timeout 25 apt-get install puppet -y
+mv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig
+echo [main] > /etc/puppet/puppet.conf
+echo ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf
+echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf
+echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf
+export PATH=$PATH:/opt/puppetlabs/puppet/bin
+systemctl restart puppet
+systemctl enable puppet
+exit
+exit
 EOF
 
 echo "Signing puppet certs from Puppet master"
