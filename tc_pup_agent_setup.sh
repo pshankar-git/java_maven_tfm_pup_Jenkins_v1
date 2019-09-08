@@ -1,3 +1,7 @@
+if [ ! -d /opt/tomcat_jenkins_setup ]; then
+ mkdir -p /opt/tomcat_jenkins_setup
+ ssh-keygen -f /opt/tomcat_jenkins_setup/tomcat_ec2_key -N ""
+fi
 tc_server_pri_dns=`sed -n '1p' < tc_pri_dns.txt`
 echo $tc_server_pri_dns
 tc_server_pri_ip=`sed -n '1p' < tc_pri_ip.txt`
@@ -26,4 +30,3 @@ systemctl enable puppet
 exit
 exit
 EOF
-""".stripIndent()
