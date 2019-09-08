@@ -35,22 +35,6 @@ pipeline {
             }
         }
 
-        stage ('Tomcat SSH key Setup') {
-            steps {
-                sh 'tomcat_setup_dir=/opt/tomcat_jenkins_setup && mkdir -p ${tomcat_setup_dir}'
-                script {
-                    def tomcat_key_file = fileExists '/opt/tomcat_jenkins_setup/tomcat_ec2_key'
-                    if (tomcat_key_file) {
-                        sh 'echo Tomcat ssh key already present'
-                    } else {
-                        sh 'ssh-keygen -f ${tomcat_setup_dir}/tomcat_ec2_key -N ""'
-                        sh 'echo Tomcat Key generated successfully'
-                    }
-
-                }
-            }
-        }
-
         stage ('Terraform Setup') {
             steps {
                 script {
@@ -87,13 +71,12 @@ pipeline {
             }
         }    
         
-        stage ('Generating tomcat SSH keys') {
+        stage ('Generating Tomcat SSH keys') {
             steps {
                 sh """
                 if [ ! -f ${WORKSPACE}/tomcat_ec2_key ]; then
                     ssh-keygen -f ${WORKSPACE}/tomcat_ec2_key -N ""
                 fi
-
                 """
             }
         }
