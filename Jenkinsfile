@@ -76,12 +76,12 @@ pipeline {
 
         stage ('Setting up Host variables') {
             steps {
-                sh 'tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`'
-                sh 'tc_server_pri_dns=`terraform output -json tomcat_private_dns | cut -d '"' -f2`'
-                sh 'tc_server_pub_ip=`terraform output -json tomcat_public_ip | cut -d '"' -f2`'
-                sh 'tc_server_pri_ip=`terraform output -json tomcat_private_ip | cut -d '"' -f2`'
-                sh 'pupmaster_pri_dns=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_dns.txt`'
-                sh 'pupmaster_pri_ip=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_ip.txt`'
+                sh tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`
+                sh tc_server_pri_dns=`terraform output -json tomcat_private_dns | cut -d '"' -f2`
+                sh tc_server_pub_ip=`terraform output -json tomcat_public_ip | cut -d '"' -f2`
+                sh tc_server_pri_ip=`terraform output -json tomcat_private_ip | cut -d '"' -f2`
+                sh pupmaster_pri_dns=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_dns.txt`
+                sh pupmaster_pri_ip=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_ip.txt`
             }
         }    
         
