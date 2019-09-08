@@ -74,26 +74,28 @@ pipeline {
             }
         }
 
+        stage ('Setting up Host variables') {
+            steps {
+                sh 'tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`'
+                sh 'tc_server_pri_dns=`terraform output -json tomcat_private_dns | cut -d '"' -f2`'
+                sh 'tc_server_pub_ip=`terraform output -json tomcat_public_ip | cut -d '"' -f2`'
+                sh 'tc_server_pri_ip=`terraform output -json tomcat_private_ip | cut -d '"' -f2`'
+                sh 'pupmaster_pri_dns=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_dns.txt`'
+                sh 'pupmaster_pri_ip=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_ip.txt`'
+            }
+        }    
+        
         stage ('Setting up puppet node on Tomcat server') {
             steps {
-                sh """
-                    tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`
-                    tc_server_pri_dns=`terraform output -json tomcat_private_dns | cut -d '"' -f2`
-                    tc_server_pub_ip=`terraform output -json tomcat_public_ip | cut -d '"' -f2`    
-                    tc_server_pri_ip=`terraform output -json tomcat_private_ip | cut -d '"' -f2`
-                    pupmaster_pri_dns=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_dns.txt`
-                    pupmaster_pri_ip=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_ip.txt`
-                    """
                 sshagent(['ubuntu']) {
-                    
                     echo 'Deploying....'
                     sh """
-                    ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@\${tc_server_pri_dns} -oStrictHostKeyChecking=no <<EOF
+                    ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@\$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF
                     sudo su -
                     hostname tomcatpuppetagent.ec2.internal
                     echo tomcatpuppetagent.ec2.internal > /etc/hostname
                     apt-get update -y
-                    echo \${pupmaster_pri_ip} puppetmaster.ec2.internal \${pupmaster_pri_dns} >> /etc/hosts
+                    echo \$pupmaster_pri_ip puppetmaster.ec2.internal \${pupmaster_pri_dns} >> /etc/hosts
                     echo \${tc_server_pri_ip} tomcatpuppetagent.ec2.internal \${tc_server_pri_dns} >> /etc/hosts
                     wget https://apt.puppetlabs.com/puppet-release-bionic.deb
                     dpkg -i puppet-release-bionic.deb
@@ -103,7 +105,6 @@ pipeline {
                     echo ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf
                     echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf
                     echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf
-                    #export PATH=$PATH:/opt/puppetlabs/puppet/bin
                     systemctl restart puppet
                     systemctl enable puppet
                     exit
