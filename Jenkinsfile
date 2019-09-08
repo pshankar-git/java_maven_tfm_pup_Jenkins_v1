@@ -87,6 +87,17 @@ pipeline {
             }
         }    
         
+        stage ('Generating tomcat SSH keys') {
+            steps {
+                sh """
+                if [ ! -f ${WORKSPACE}/tomcat_ec2_key ]; then
+                    ssh-keygen -f ${WORKSPACE}/tomcat_ec2_key -N ""
+                fi
+
+                """
+            }
+        }
+
         stage ('Setting up puppet node on Tomcat server') {
             steps {
                 sh './tc_pup_agent_setup.sh'
