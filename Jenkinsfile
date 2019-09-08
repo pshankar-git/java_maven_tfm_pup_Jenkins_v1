@@ -89,7 +89,7 @@ pipeline {
         
         stage ('Setting up puppet node on Tomcat server') {
             steps {
-                sh 'tc_pup_agent_setup.sh'
+                sh './tc_pup_agent_setup.sh'
             }
         }
 
