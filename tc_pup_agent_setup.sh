@@ -19,6 +19,7 @@ apt-get install puppet -y; \
 exit;'"
 #EOF
 
+
 echo "Configuring puppet agent on Tomcat"
 #ssh -i tomcat_ec2_key -tt ubuntu@$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF
 ssh -t ubuntu@$tc_server_pri_dns -i "tomcat_ec2_key" -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'mv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig; \
@@ -33,7 +34,7 @@ exit;'"
 #EOF
 
 echo "Signing puppet certs from Puppet master"
-ssh -i puppet_ec2_key -t ubuntu@$pupmaster_pri_ip -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'echo ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_server_pri_dns} >> /etc/hosts; \
+ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$pupmaster_pri_ip -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'echo ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_server_pri_dns} >> /etc/hosts; \
 puppet cert list; \
 puppet cert sign tomcatpuppetagent.ec2.internal; \
 exit;'"
