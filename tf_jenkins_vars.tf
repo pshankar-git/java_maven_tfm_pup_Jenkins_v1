@@ -10,7 +10,7 @@ variable "subnet_id" {
 
 variable "ports" {
     type = "list"
-    default = ["22", "9090", 0]
+    default = ["22", "8080", 0]
 }
 
 variable "ami" {
