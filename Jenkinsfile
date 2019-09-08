@@ -77,12 +77,12 @@ pipeline {
         stage ('Setting up Host variables') {
             steps {
                 sh """
-                    export tc_server_pub_dns=`terraform output -json tomcat_public_dns | cut -d '"' -f2`
-                    export tc_server_pri_dns=`terraform output -json tomcat_private_dns | cut -d '"' -f2`
-                    export tc_server_pub_ip=`terraform output -json tomcat_public_ip | cut -d '"' -f2`
-                    export tc_server_pri_ip=`terraform output -json tomcat_private_ip | cut -d '"' -f2`
-                    export pupmaster_pri_dns=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_dns.txt`
-                    export pupmaster_pri_ip=`sed -n '1p' < /opt/pup_setup_tf/ec2_private_ip.txt`                    
+                    terraform output -json tomcat_public_dns | cut -d '"' -f2 > tc_pub_dns.txt
+                    terraform output -json tomcat_private_dns | cut -d '"' -f2 > tc_pri_dns.txt
+                    terraform output -json tomcat_public_ip | cut -d '"' -f2 > tc_pub_ip.txt
+                    terraform output -json tomcat_private_ip | cut -d '"' -f2 > tc_pri_ip.txt
+                    sed -n '1p' < /opt/pup_setup_tf/ec2_private_dns.txt > pup_master_pri_dns.txt
+                    sed -n '1p' < /opt/pup_setup_tf/ec2_private_ip.txt > pup_master_pri_ip.txt                  
                 """
             }
         }    
@@ -90,6 +90,10 @@ pipeline {
         stage ('Setting up puppet node on Tomcat server') {
             steps {
                 sh """
+                    tc_server_pri_dns=`sed -n '1p' < tc_pri_dns.txt`
+                    tc_server_pri_ip=`sed -n '1p' < tc_pri_ip.txt`
+                    pupmaster_pri_ip=`sed -n '1p' < pup_master_pri_ip.txt`
+                    pupmaster_pri_dns=`sed -n '1p' < pup_master_pri_dns.txt`
                     ssh -i /opt/tomcat_jenkins_setup/tomcat_ec2_key -tt ubuntu@$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF
                     sudo su -
                     hostname tomcatpuppetagent.ec2.internal
