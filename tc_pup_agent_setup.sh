@@ -17,13 +17,36 @@ wget https://apt.puppetlabs.com/puppet-release-bionic.deb
 dpkg -i puppet-release-bionic.deb
 apt-get update -y
 apt-get install puppet -y
-mv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig
-echo [main] > /etc/puppet/puppet.conf
-echo ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf
-echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf
-echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf
-systemctl restart puppet
-systemctl enable puppet
+if [ $? -eq 0 ]; then
+  mv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig
+  echo [main] > /etc/puppet/puppet.conf
+  echo ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf
+  echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf
+  echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf
+  export PATH=$PATH:/opt/puppetlabs/puppet/bin
+  systemctl restart puppet
+  systemctl enable puppet
+  exit
+  exit
+fi
+EOF
+
+echo "Signing puppet certs from Puppet master"
+ssh -i /opt/pup_setup_tf/puppet_ec2_key -tt ubuntu@$pupmaster_pri_ip -oStrictHostKeyChecking=no <<EOF
+sudo su -
+echo ${tc_server_pri_ip} tomcatpuppetagent.ec2.internal ${tc_server_pri_dns} >> /etc/hosts
+puppet cert list
+puppet cert sign tomcatpuppetagent.ec2.internal
 exit
 exit
 EOF
+
+echo "Test puppet agent (Tomcat server) connection"
+ssh -i tomcat_ec2_key -tt ubuntu@$tc_server_pri_dns -oStrictHostKeyChecking=no <<EOF
+sudo su -
+puppet agent --test
+exit
+exit
+EOF
+
+
