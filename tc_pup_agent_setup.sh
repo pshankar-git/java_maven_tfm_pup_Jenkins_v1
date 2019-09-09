@@ -3,8 +3,8 @@
 # This script does the following
 #
 #    * Create AWS resources like EC2 instance, Security Group and a Key pair for Tomcat App Server
-#    * Install Puppet Agent package on the newly create Tomcat ec2 instance
-#    * Configure /etc/puppet/puppet.conf for thr Tomcat Puppet Agent
+#    * Install Puppet Agent package on the newly created Tomcat EC2 instance
+#    * Configure /etc/puppet/puppet.conf for the Tomcat Puppet Agent
 #    * Generate certificate signing request to Puppet Master
 #    * Puppet Master to sign the CSR generated and add Tomcat server as a puppet agent
 
@@ -13,6 +13,8 @@
 printf "\n\n##########FETCHING TOMCAT AND PUPPET MASTER SERVER DNS and IP's\n"
 TC_SERVER_PRI_DNS=`sed -n '1p' < tc_pri_dns.txt`
 echo "TOMCAT SERVER PRIVATE DNS: $TC_SERVER_PRI_DNS"
+TC_SERVER_PUB_DNS=`sed -n '1p' < tc_pub_dns.txt`
+echo "TOMCAT SERVER PUBLIC DNS: $TC_SERVER_PUB_DNS"
 TC_SERVER_PRI_IP=`sed -n '1p' < tc_pri_ip.txt`
 echo "TOMCAT SERVER PRIVATE IP: $TC_SERVER_PRI_IP"
 PUPMASTER_PRI_IP=`sed -n '1p' < pup_master_pri_ip.txt`
@@ -53,4 +55,42 @@ ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHost
 printf "\n\n############TEST TOMCAT PUPPET AGENT CONNECTION TO PUPPET MASTER AND APPLY CATALOG\n"
 ssh -i tomcat_ec2_key -t ubuntu@$TC_SERVER_PRI_DNS -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet agent --test; \
 	exit;'"
+
+printf "\n\n############INSTALLING JAVA PUPPET MODULE ON PUPPET MASTER- PREREQUISITE FOR RUNNING TOMCAT\n"
+ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet module install puppetlabs-java --version 5.0.1 --modulepath=/etc/puppet/code/environments/production/modules; \
+	PROD_MODULE_DIR="/etc/puppet/code/environments/production/modules"; \
+	cp ${PROD_MODULE_DIR}/java/example/init.pp ${PROD_MODULE_DIR}/../manifests/java.pp; \
+	#printf "\n\n LATEST VERSION OF JAVA SHOULD NOW BE INSTALLED ON THE TOMCAT SERVER; PLEASE VERIFY\n"; \
+	#echo "SCRIPT WILL CONTINUE TO RUN AFTER 30 SECONDS"; \
+	#sleep 30; \
+	exit;'"
+
+printf "\n\n############COPYING THE PROJECT ARTIFACTS (.war) TO PUPPET MASTER\n"
+scp -i /opt/pup_setup_tf/puppet_ec2_key ${WORKSPACE}/target/*.war ubuntu@$PUPMASTER_PRI_IP:/tmp
+
+
+printf "\n\n############INSTALLING PUPPET TOMCAT MODULE AND DEPENDENCIES ON PUPPET MASTER\n"
+ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet module install puppetlabs-stdlib --modulepath=/etc/puppet/code/environments/production/modules; \
+	PROD_MODULE_DIR="/etc/puppet/code/environments/production/modules"; \
+	puppet module install puppetlabs-tomcat --modulepath=${PROD_MODULE_DIR}; \
+	mkdir -p ${PROD_MODULE_DIR}/tomcat/files; \
+	cp /tmp/mvn-hello-world.war ${PROD_MODULE_DIR}/tomcat/files; \
+	exit;'"
+
+printf "\n\n############COPYING THE PUPPET MANIFESTS FOR TOMCAT TO PUPPET MASTER\n"
+scp -i /opt/pup_setup_tf/puppet_ec2_key ${WORKSPACE}/tomcat.pp ubuntu@$PUPMASTER_PRI_IP:/tmp
+ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'cp /tmp/tomcat.pp /etc/puppet/code/environments/production/manifests; \
+	exit;'"
+
+printf "\n\n###########DEPLOYING WAR TO TOMCAT APP SERVER USING PUPPET MANIFESTS; APPLYING MASTER CATALOG\n"
+ssh -i tomcat_ec2_key -t ubuntu@$TC_SERVER_PRI_DNS -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet agent --test; \
+        exit;'"
+
+printf "\n\n##### DEPLOYMENT WAS SUCCESSFUL \n"
+printf "\n\n########## PLEASE ACCESS THE APPLICATION USING BELOW URL\n"
+printf "\n\nhttp://${TC_SERVER_PUB_DNS}:8080/mv-hello-world\n"
+
+
+
+
 
