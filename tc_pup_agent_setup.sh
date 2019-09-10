@@ -23,7 +23,7 @@ PUPMASTER_PRI_DNS=`sed -n '1p' < pup_master_pri_dns.txt`
 echo "PUPPET MASTER PRIVATE DNS: $PUPMASTER_PRI_DNS"
 
 printf "\n\n###########SSH TO TOMCAT EC2 INSTANCE AND INSTALL PUPPET AGENT\n"
-sleep 20
+sleep 10
 SSH_MSG_1=$(ssh -tt ubuntu@$TC_SERVER_PRI_DNS -i "tomcat_ec2_key" -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'hostname tomcatpuppetagent.ec2.internal; \
 	echo tomcatpuppetagent.ec2.internal > /etc/hostname; \
 	echo $PUPMASTER_PRI_IP puppetmaster.ec2.internal ${PUPMASTER_PRI_DNS} >> /etc/hosts; \
@@ -39,15 +39,26 @@ export ERR_MSG="Error: ""$SSH_MSG_1"
 test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
 
 printf "\n\n###########CONFIGURING PUPPET AGENT ON TOMCAT EC2 INSTANCE\n"
-SSH_MSG_2=$(ssh -tt ubuntu@$TC_SERVER_PRI_DNS -i "tomcat_ec2_key" -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'mv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig; \
-	echo [main] > /etc/puppet/puppet.conf; \
-	echo ssldir = /var/lib/puppet/ssl >> /etc/puppet/puppet.conf; \
-	echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf; \
-	echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf; \
-	echo environment = production >> /etc/puppet/puppet.conf; \
-	systemctl restart puppet; \
-	systemctl enable puppet; \
-	exit;'")
+SSH_MSG_2=$(ssh -tt ubuntu@$TC_SERVER_PRI_DNS -i "tomcat_ec2_key" -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'ls -ltr; \
+        if [ -e /etc/puppet/puppet.conf ]; then
+          PUP_CONF=/etc/puppet/puppet.conf
+          echo "PUPPET CONFIG FILE IS: $PUP_CONF"
+        else
+          PUP_CONF=/etc/puppetlabs/puppet/puppet.conf
+          echo "PUPPET CONFIG FILE IS $PUP_CONF"
+        fi
+        mv $PUP_CONF $PUP_CONF.orig
+        echo [agent] > $PUP_CONF; \
+        echo certname = tomcatpuppetagent.ec2.internal >> $PUP_CONF; \
+        echo server = puppetmaster.ec2.internal >> $PUP_CONF; \
+        echo environment = production >> $PUP_CONF; \
+        systemctl restart puppet; \
+        systemctl enable puppet; \
+        exit;'")
+
+echo "SCRIPT EXITING....."
+exit 1
+
 echo $SSH_MSG_2
 export EXIT_CODE=$?
 export ERR_MSG="Error: ""$SSH_MSG_2"
