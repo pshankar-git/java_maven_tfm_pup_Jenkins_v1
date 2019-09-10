@@ -54,6 +54,7 @@ export ERR_MSG="Error: ""$SSH_MSG_2"
 test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
 
 printf "\n\n############SIGNING PUPPET CERTS FROM PUPPET MASTER FOR NEWLY CREATED TOMCAT PUPPET AGENT\n"
+sleep 20
 SSH_MSG_3=$(ssh -i /opt/pup_setup_tf/puppet_ec2_key -tt ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'echo ${TC_SERVER_PRI_IP} tomcatpuppetagent.ec2.internal ${TC_SERVER_PRI_DNS} >> /etc/hosts; \
         puppet cert list; \
 	puppet cert sign tomcatpuppetagent.ec2.internal; \
@@ -63,13 +64,14 @@ export EXIT_CODE=$?
 export ERR_MSG="Error: ""$SSH_MSG_3"
 test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
 
-printf "\n\n############TEST TOMCAT PUPPET AGENT CONNECTION TO PUPPET MASTER AND APPLY CATALOG\n"
-SSH_MSG_4=$(ssh -i tomcat_ec2_key -tt ubuntu@$TC_SERVER_PRI_DNS -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet agent --test; \
-	exit;'")
-echo $SSH_MSG_4
-export EXIT_CODE=$?
-export ERR_MSG="Error: ""$SSH_MSG_4"
-test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
+#printf "\n\n############TEST TOMCAT PUPPET AGENT CONNECTION TO PUPPET MASTER AND APPLY CATALOG\n"
+#SSH_MSG_4=$(ssh -i tomcat_ec2_key -tt ubuntu@$TC_SERVER_PRI_DNS -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet agent --test; \
+#	sleep 25; \
+#	exit;'")
+#echo $SSH_MSG_4
+#export EXIT_CODE=$?
+#export ERR_MSG="Error: ""$SSH_MSG_4"
+#test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
 
 printf "\n\n############INSTALLING JAVA PUPPET MODULE ON PUPPET MASTER- PREREQUISITE FOR RUNNING TOMCAT\n"
 SSH_MSG_5=$(ssh -i /opt/pup_setup_tf/puppet_ec2_key -tt ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet module install puppetlabs-java --version 5.0.1 --modulepath=/etc/puppet/code/environments/production/modules; \
@@ -113,6 +115,7 @@ test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
 
 printf "\n\n###########DEPLOYING WAR TO TOMCAT APP SERVER USING PUPPET MANIFESTS; APPLYING MASTER CATALOG\n"
 SSH_MSG_8=$(ssh -i tomcat_ec2_key -tt ubuntu@$TC_SERVER_PRI_DNS -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet agent --test; \
+	sleep 25; \
 	exit;'")
 echo $SSH_MSG_8
 
