@@ -65,7 +65,7 @@ EOF
 )"
 
 
-ssh -tt ubuntu@ip-172-31-94-115.ec2.internal -i "/var/lib/jenkins/workspace/terraform_pipeline/tomcat_ec2_key" -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c '$ssh_cmd'"
+ssh -tt ubuntu@$TC_SERVER_PRI_DNS -i tomcat_ec2_key -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c '$ssh_cmd'"
 
 echo "SCRIPT EXITING....."
 exit 1
