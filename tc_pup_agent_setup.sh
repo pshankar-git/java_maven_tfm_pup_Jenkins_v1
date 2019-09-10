@@ -23,7 +23,7 @@ PUPMASTER_PRI_DNS=`sed -n '1p' < pup_master_pri_dns.txt`
 echo "PUPPET MASTER PRIVATE DNS: $PUPMASTER_PRI_DNS"
 
 printf "\n\n###########SSH TO TOMCAT EC2 INSTANCE AND INSTALL PUPPET AGENT\n"
-sleep 10
+sleep 25
 SSH_MSG_1=$(ssh -tt ubuntu@$TC_SERVER_PRI_DNS -i "tomcat_ec2_key" -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'hostname tomcatpuppetagent.ec2.internal; \
 	echo tomcatpuppetagent.ec2.internal > /etc/hostname; \
 	echo $PUPMASTER_PRI_IP puppetmaster.ec2.internal ${PUPMASTER_PRI_DNS} >> /etc/hosts; \
