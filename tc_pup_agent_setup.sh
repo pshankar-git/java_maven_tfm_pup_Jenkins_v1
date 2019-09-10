@@ -115,7 +115,6 @@ test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
 
 printf "\n\n###########DEPLOYING WAR TO TOMCAT APP SERVER USING PUPPET MANIFESTS; APPLYING MASTER CATALOG\n"
 SSH_MSG_8=$(ssh -i tomcat_ec2_key -tt ubuntu@$TC_SERVER_PRI_DNS -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet agent --test; \
-	sleep 25; \
 	exit;'")
 echo $SSH_MSG_8
 
