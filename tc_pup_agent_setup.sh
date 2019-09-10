@@ -59,7 +59,7 @@ ssh -i tomcat_ec2_key -t ubuntu@$TC_SERVER_PRI_DNS -oStrictHostKeyChecking=no "/
 printf "\n\n############INSTALLING JAVA PUPPET MODULE ON PUPPET MASTER- PREREQUISITE FOR RUNNING TOMCAT\n"
 ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet module install puppetlabs-java --version 5.0.1 --modulepath=/etc/puppet/code/environments/production/modules; \
 	PROD_MODULE_DIR="/etc/puppet/code/environments/production/modules"; \
-	cp ${PROD_MODULE_DIR}/java/example/init.pp ${PROD_MODULE_DIR}/../manifests/java.pp; \
+	cp /etc/puppet/code/environments/production/modules/java/examples/init.pp /etc/puppet/code/environments/production/manifests/java.pp; \
 	exit;'"
 
 printf "\n\n############COPYING THE PROJECT ARTIFACTS (.war) TO PUPPET MASTER\n"
@@ -71,10 +71,9 @@ fi
 
 printf "\n\n############INSTALLING PUPPET TOMCAT MODULE AND DEPENDENCIES ON PUPPET MASTER\n"
 ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet module install puppetlabs-stdlib --modulepath=/etc/puppet/code/environments/production/modules; \
-	PROD_MODULE_DIR="/etc/puppet/code/environments/production/modules"; \
-	puppet module install puppetlabs-tomcat --modulepath=${PROD_MODULE_DIR}; \
-	mkdir -p ${PROD_MODULE_DIR}/tomcat/files; \
-	cp /tmp/mvn-hello-world.war ${PROD_MODULE_DIR}/tomcat/files; \
+	puppet module install puppetlabs-tomcat --modulepath=/etc/puppet/code/environments/production/modules; \
+	mkdir -p /etc/puppet/code/environments/production/modules/tomcat/files; \
+	cp /tmp/mvn-hello-world.war /etc/puppet/code/environments/production/modules/tomcat/files; \
 	exit;'"
 
 printf "\n\n############COPYING THE PUPPET MANIFESTS FOR TOMCAT TO PUPPET MASTER\n"
