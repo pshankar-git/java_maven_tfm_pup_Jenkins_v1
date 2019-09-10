@@ -39,29 +39,40 @@ export ERR_MSG="Error: ""$SSH_MSG_1"
 test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
 
 printf "\n\n###########CONFIGURING PUPPET AGENT ON TOMCAT EC2 INSTANCE\n"
-SSH_MSG_2=$(ssh -tt ubuntu@$TC_SERVER_PRI_DNS -i "tomcat_ec2_key" -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'ls -ltr; \
-if [ -e "/etc/puppet/puppet.conf" ]; then; \
-export PUP_CONF="/etc/puppet/puppet.conf"; \
-echo "PUPPET CONFIG FILE IS: ${PUP_CONF}"; \
-else; \
-export PUP_CONF="/etc/puppetlabs/puppet/puppet.conf"; \
-echo "PUPPET CONFIG FILE IS ${PUP_CONF}"; \
-fi; \
-mv ${PUP_CONF} ${PUP_CONF}.orig; \
-echo [agent] > ${PUP_CONF}; \
-echo certname = tomcatpuppetagent.ec2.internal >> ${PUP_CONF}; \
-echo server = puppetmaster.ec2.internal >> ${PUP_CONF}; \
-echo environment = production >> ${PUP_CONF}; \
-systemctl restart puppet; \
-systemctl enable puppet; \
-exit;'")
+ssh_cmd="$(cat <<-EOF
+    ls /home/ubuntu;
+
+    if [ -e /etc/puppet/puppet.conf ]; then
+        echo "Conf file is /etc/puppet/puppet.conf"
+        mv /etc/puppet/puppet.conf /etc/puppet/puppet.conf.orig
+        echo [agent] > /etc/puppet/puppet.conf
+        echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppet/puppet.conf
+        echo server = puppetmaster.ec2.internal >> /etc/puppet/puppet.conf
+        echo environment = production >> /etc/puppet/puppet.conf
+        systemctl restart puppet
+        systemctl enable puppet
+    else
+        echo "Conf file is /etc/puppetlabs/puppet/puppet.conf"
+        mv /etc/puppetlabs/puppet/puppet.conf /etc/puppetlabs/puppet/puppet.conf.orig
+        echo [agent] > /etc/puppetlabs/puppet/puppet.conf
+        echo certname = tomcatpuppetagent.ec2.internal >> /etc/puppetlabs/puppet/puppet.conf
+        echo server = puppetmaster.ec2.internal >> /etc/puppetlabs/puppet/puppet.conf
+        echo environment = production >> /etc/puppetlabs/puppet/puppet.conf
+        systemctl restart puppet
+        systemctl enable puppet
+    fi
+EOF
+)"
+
+
+ssh -tt ubuntu@ip-172-31-94-115.ec2.internal -i "/var/lib/jenkins/workspace/terraform_pipeline/tomcat_ec2_key" -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c '$ssh_cmd'"
 
 echo "SCRIPT EXITING....."
 exit 1
 
-echo $SSH_MSG_2
+echo $ssh_cmd
 export EXIT_CODE=$?
-export ERR_MSG="Error: ""$SSH_MSG_2"
+export ERR_MSG="Error: ""$ssh_cmd"
 test $EXIT_CODE -ne 0 && $EXIT_CODE $ERR_MSG exit
 
 printf "\n\n############SIGNING PUPPET CERTS FROM PUPPET MASTER FOR NEWLY CREATED TOMCAT PUPPET AGENT\n"
