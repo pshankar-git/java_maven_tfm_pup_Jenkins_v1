@@ -60,13 +60,13 @@ printf "\n\n############INSTALLING JAVA PUPPET MODULE ON PUPPET MASTER- PREREQUI
 ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet module install puppetlabs-java --version 5.0.1 --modulepath=/etc/puppet/code/environments/production/modules; \
 	PROD_MODULE_DIR="/etc/puppet/code/environments/production/modules"; \
 	cp ${PROD_MODULE_DIR}/java/example/init.pp ${PROD_MODULE_DIR}/../manifests/java.pp; \
-	#printf "\n\n LATEST VERSION OF JAVA SHOULD NOW BE INSTALLED ON THE TOMCAT SERVER; PLEASE VERIFY\n"; \
-	#echo "SCRIPT WILL CONTINUE TO RUN AFTER 30 SECONDS"; \
-	#sleep 30; \
 	exit;'"
 
 printf "\n\n############COPYING THE PROJECT ARTIFACTS (.war) TO PUPPET MASTER\n"
 scp -i /opt/pup_setup_tf/puppet_ec2_key ${WORKSPACE}/target/*.war ubuntu@$PUPMASTER_PRI_IP:/tmp
+if [ $? -eq 0 ]; then
+	printf "\n Successfully copied\n";
+fi
 
 
 printf "\n\n############INSTALLING PUPPET TOMCAT MODULE AND DEPENDENCIES ON PUPPET MASTER\n"
@@ -79,14 +79,23 @@ ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHost
 
 printf "\n\n############COPYING THE PUPPET MANIFESTS FOR TOMCAT TO PUPPET MASTER\n"
 scp -i /opt/pup_setup_tf/puppet_ec2_key ${WORKSPACE}/tomcat.pp ubuntu@$PUPMASTER_PRI_IP:/tmp
+if [ $? -eq 0 ]; then
+        printf "\n Successfully copied\n";
+fi
+
 ssh -i /opt/pup_setup_tf/puppet_ec2_key -t ubuntu@$PUPMASTER_PRI_IP -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'cp /tmp/tomcat.pp /etc/puppet/code/environments/production/manifests; \
 	exit;'"
 
 printf "\n\n###########DEPLOYING WAR TO TOMCAT APP SERVER USING PUPPET MANIFESTS; APPLYING MASTER CATALOG\n"
 ssh -i tomcat_ec2_key -t ubuntu@$TC_SERVER_PRI_DNS -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c 'puppet agent --test; \
+	if [ $? -eq 0 ];
+       	then
+	printf "\n\n##### DEPLOYMENT WAS SUCCESSFUL \n"
+	else
+	printf "\n\n#### DEPLOYMENT EXITED WITH ERRORS\n"
+        fi
         exit;'"
 
-printf "\n\n##### DEPLOYMENT WAS SUCCESSFUL \n"
 printf "\n\n########## PLEASE ACCESS THE APPLICATION USING BELOW URL\n"
 printf "\n\nhttp://${TC_SERVER_PUB_DNS}:8080/mv-hello-world\n"
 
