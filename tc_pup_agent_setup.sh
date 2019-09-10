@@ -67,9 +67,6 @@ EOF
 
 ssh -tt ubuntu@$TC_SERVER_PRI_DNS -i tomcat_ec2_key -oStrictHostKeyChecking=no "/usr/bin/sudo bash -c '$ssh_cmd'"
 
-echo "SCRIPT EXITING....."
-exit 1
-
 echo $ssh_cmd
 export EXIT_CODE=$?
 export ERR_MSG="Error: ""$ssh_cmd"
